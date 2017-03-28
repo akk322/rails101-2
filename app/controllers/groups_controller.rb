@@ -1,5 +1,5 @@
 class GroupsController < ApplicationController
-  before_action :authenticate_user!,only:[:new,:create]
+  before_action :authenticate_user!,only:[:new,:create,:edit, :update, :destroy]
   def index
     @groups = Group.all
   end
@@ -19,7 +19,7 @@ class GroupsController < ApplicationController
  def create
    @group = Group.new(group_params)
    @group.user =current_user
-   
+
    if @group.save
      redirect_to groups_path
    else
@@ -29,6 +29,9 @@ class GroupsController < ApplicationController
 
 def update
   @group = Group.find(params[:id])
+  if current_user != @group.user
+      redirect_to root_path, alert: "You have no permission."
+    end
   if @group.update(group_params)
       redirect_to groups_path, notice: "Update Success"
     else
@@ -38,9 +41,13 @@ end
 
 def destroy
   @group= Group.find(params[:id])
+
+  if current_user != @group.user #如果当前用户不等于组成员，就重定向到root_path去，并且警告“没资格”
+      redirect_to root_path, alert: "You have no permission."
+  end
+
   @group.destroy
-  flash[:alert] = "Group deleted"
-  redirect_to groups_path
+  redirect_to groups_path, alert: "Group deleted"#如果组被删掉了，重定向到group_path去，并且警告组被删除了
 end
 
  private
